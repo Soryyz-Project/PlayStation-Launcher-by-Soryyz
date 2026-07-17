@@ -9,6 +9,8 @@ pub struct AppConfig {
     pub minimize_to_tray: bool,
     pub hints_visible: bool,
     pub bg_video: String,
+    pub bg_video_enabled: bool,
+    pub bg_dimmed: f64,
 }
 
 impl Default for AppConfig {
@@ -19,6 +21,8 @@ impl Default for AppConfig {
             minimize_to_tray: true,
             hints_visible: true,
             bg_video: "S1.mp4".to_string(),
+            bg_video_enabled: true,
+            bg_dimmed: 0.8,
         }
     }
 }

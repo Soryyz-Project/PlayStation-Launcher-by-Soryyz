@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 
@@ -9,6 +9,8 @@ const BG_OPTIONS = [
   { label: "4", value: "S4.mp4" },
   { label: "5", value: "S5.mp4" },
   { label: "6", value: "S6.mp4" },
+  { label: "7", value: "S7.mp4" },
+  { label: "8", value: "S8.mp4" },
 ];
 
 interface AppConfig {
@@ -16,6 +18,8 @@ interface AppConfig {
   auto_launch: boolean;
   minimize_to_tray: boolean;
   bg_video: string;
+  bg_video_enabled: boolean;
+  bg_dimmed: number;
 }
 
 interface Props {
@@ -23,24 +27,40 @@ interface Props {
 }
 
 export function SettingsScreen({ onRefreshGames }: Props) {
-  const [config, setConfig] = useState<AppConfig>({
-    game_paths: [],
-    auto_launch: false,
-    minimize_to_tray: true,
-  });
-  const [saved, setSaved] = useState(false);
+  const [config, setConfig] = useState<AppConfig | null>(null);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    invoke<AppConfig>("get_config").then(setConfig).catch(console.error);
+    invoke<AppConfig>("get_config").then((cfg) => {
+      setConfig({
+        game_paths: cfg.game_paths || [],
+        auto_launch: cfg.auto_launch ?? false,
+        minimize_to_tray: cfg.minimize_to_tray ?? true,
+        bg_video: cfg.bg_video || "S1.mp4",
+        bg_video_enabled: cfg.bg_video_enabled ?? true,
+        bg_dimmed: cfg.bg_dimmed ?? 0.8,
+      });
+    }).catch(console.error);
   }, []);
 
-  const save = () => {
-    invoke("set_config", { config }).then(() => {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+  const save = useCallback((updated: AppConfig) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
+      invoke("set_config", { config: updated }).catch(console.error);
       onRefreshGames();
+    }, 200);
+  }, [onRefreshGames]);
+
+  const update = useCallback((patch: Partial<AppConfig>) => {
+    setConfig((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      save(next);
+      return next;
     });
-  };
+  }, [save]);
+
+  if (!config) return null;
 
   return (
     <div className="settings-screen">
@@ -54,7 +74,7 @@ export function SettingsScreen({ onRefreshGames }: Props) {
           <input
             type="checkbox"
             checked={config.minimize_to_tray}
-            onChange={(e) => setConfig({ ...config, minimize_to_tray: e.target.checked })}
+            onChange={(e) => update({ minimize_to_tray: e.target.checked })}
           />
         </label>
 
@@ -63,25 +83,55 @@ export function SettingsScreen({ onRefreshGames }: Props) {
           <input
             type="checkbox"
             checked={config.auto_launch}
-            onChange={(e) => setConfig({ ...config, auto_launch: e.target.checked })}
+            onChange={(e) => update({ auto_launch: e.target.checked })}
           />
         </label>
       </section>
 
       <section className="settings-section">
         <h3 className="settings-section-title">Оформление</h3>
+
         <label className="settings-row">
           <span>Фоновое видео</span>
-          <select
-            className="settings-select"
-            value={config.bg_video || "S1.mp4"}
-            onChange={(e) => setConfig({ ...config, bg_video: e.target.value })}
-          >
-            {BG_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
+          <input
+            type="checkbox"
+            checked={config.bg_video_enabled}
+            onChange={(e) => update({ bg_video_enabled: e.target.checked })}
+          />
         </label>
+
+        {config.bg_video_enabled && (
+          <>
+            <div className="bg-selector">
+              {BG_OPTIONS.map((o) => (
+                <button
+                  key={o.value}
+                  className={`bg-card ${config.bg_video === o.value ? "active" : ""}`}
+                  onClick={() => update({ bg_video: o.value })}
+                >
+                  <div className="bg-card-preview">
+                    <span className="bg-card-num">{o.label}</span>
+                    {config.bg_video === o.value && <span className="bg-card-check">▶</span>}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="settings-row">
+              <span>Затемнение</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                className="settings-slider"
+                value={config.bg_dimmed}
+                onChange={(e) => update({ bg_dimmed: parseFloat(e.target.value) })}
+              />
+              <span className="settings-slider-value">{Math.round(config.bg_dimmed * 100)}%</span>
+            </div>
+          </>
+        )}
       </section>
 
       <section className="settings-section">
@@ -98,7 +148,7 @@ export function SettingsScreen({ onRefreshGames }: Props) {
               className="settings-remove-btn"
               onClick={() => {
                 const next = config.game_paths.filter((_, j) => j !== i);
-                setConfig({ ...config, game_paths: next });
+                update({ game_paths: next });
               }}
             >
               ✕
@@ -112,7 +162,7 @@ export function SettingsScreen({ onRefreshGames }: Props) {
             try {
               const selected = await open({ directory: true, multiple: false });
               if (selected) {
-                setConfig({ ...config, game_paths: [...config.game_paths, selected] });
+                update({ game_paths: [...config.game_paths, selected] });
               }
             } catch {}
           }}
@@ -120,19 +170,6 @@ export function SettingsScreen({ onRefreshGames }: Props) {
           + Добавить папку
         </button>
       </section>
-
-      <section className="settings-section">
-        <h3 className="settings-section-title">О программе</h3>
-        <div className="settings-about">
-          <p>PS5 Launcher v0.1.0</p>
-          <p>Лаунчер для ПК в стиле PS5</p>
-          <p>Сделано на Rust + Tauri + React</p>
-        </div>
-      </section>
-
-      <button className="settings-save-btn" onClick={save}>
-        {saved ? "✓ Сохранено" : "Сохранить"}
-      </button>
     </div>
   );
 }

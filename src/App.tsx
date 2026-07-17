@@ -49,12 +49,16 @@ function App() {
   const [barState, setBarState] = useState<"normal" | "hiding" | "media" | "showing">("normal");
   const [hintsVisible, setHintsVisible] = useState(true);
   const [bgVideo, setBgVideo] = useState("S1.mp4");
+  const [bgVideoEnabled, setBgVideoEnabled] = useState(true);
+  const [bgDimmed, setBgDimmed] = useState(0.8);
   const { games, loading, launch, refresh } = useGames();
 
   const loadConfig = useCallback(() => {
-    invoke<{ hints_visible: boolean; bg_video: string }>("get_config").then((cfg) => {
+    invoke<{ hints_visible: boolean; bg_video: string; bg_video_enabled: boolean; bg_dimmed: number }>("get_config").then((cfg) => {
       if (cfg.hints_visible !== undefined) setHintsVisible(cfg.hints_visible);
       if (cfg.bg_video) setBgVideo(cfg.bg_video);
+      if (cfg.bg_video_enabled !== undefined) setBgVideoEnabled(cfg.bg_video_enabled);
+      if (cfg.bg_dimmed !== undefined) setBgDimmed(cfg.bg_dimmed);
     }).catch(() => {});
   }, []);
 
@@ -224,9 +228,9 @@ function App() {
   return (
     <>
       {showIntro && <PS5Intro onFinish={() => setShowIntro(false)} />}
-      <video key={bgVideo} className="bg-video" src={`/bg/${bgVideo}`} muted loop autoPlay playsInline />
+      {bgVideoEnabled && <video key={bgVideo} className="bg-video" src={`/bg/${bgVideo}`} muted loop autoPlay playsInline />}
       <div className="bg-overlay" />
-      <div className="bg-gradient" />
+      <div className="bg-gradient" style={{ opacity: bgDimmed }} />
       <div className={`app ${showIntro ? "hidden" : ""}`}>
         <header className={`top-bar ${barState === "hiding" ? "bar-hiding" : barState === "media" || barState === "showing" ? "bar-media" : ""}`}>
           {barState === "media" || barState === "showing" || barState === "hiding" ? (
