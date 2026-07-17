@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
 
 interface AppConfig {
   game_paths: string[];
@@ -7,7 +8,11 @@ interface AppConfig {
   minimize_to_tray: boolean;
 }
 
-export function SettingsScreen() {
+interface Props {
+  onRefreshGames: () => void;
+}
+
+export function SettingsScreen({ onRefreshGames }: Props) {
   const [config, setConfig] = useState<AppConfig>({
     game_paths: [],
     auto_launch: false,
@@ -23,6 +28,7 @@ export function SettingsScreen() {
     invoke("set_config", { config }).then(() => {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+      onRefreshGames();
     });
   };
 
@@ -78,13 +84,11 @@ export function SettingsScreen() {
           className="settings-add-btn"
           onClick={async () => {
             try {
-              const selected = await invoke<string | null>("select_folder");
+              const selected = await open({ directory: true, multiple: false });
               if (selected) {
                 setConfig({ ...config, game_paths: [...config.game_paths, selected] });
               }
-            } catch {
-              // folder picker not implemented in basic setup
-            }
+            } catch {}
           }}
         >
           + Добавить папку

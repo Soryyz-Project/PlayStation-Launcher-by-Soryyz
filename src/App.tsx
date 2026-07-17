@@ -48,7 +48,7 @@ function App() {
   const [mediaTab, setMediaTab] = useState<"screenshots" | "videos" | null>(null);
   const [barState, setBarState] = useState<"normal" | "hiding" | "media" | "showing">("normal");
   const [hintsVisible, setHintsVisible] = useState(true);
-  const { games, loading, launch } = useGames();
+  const { games, loading, launch, refresh } = useGames();
 
   useEffect(() => {
     invoke<{ hints_visible: boolean }>("get_config").then((cfg) => {
@@ -63,6 +63,7 @@ function App() {
   libFocusRef.current = libFocus;
   const mediaTabRef = useRef(mediaTab);
   mediaTabRef.current = mediaTab;
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     invoke("get_config").then((cfg: any) => {
@@ -172,6 +173,9 @@ function App() {
             return;
           case "confirm":
             if (games[libFocusRef.current]) launch(games[libFocusRef.current].path);
+            return;
+          case "search":
+            searchInputRef.current?.focus();
             return;
         }
       }
@@ -359,6 +363,7 @@ function App() {
               focusIndex={libFocus}
               onFocusChange={setLibFocus}
               showFocus={showFocus}
+              searchInputRef={searchInputRef}
             />
           )}
 
@@ -384,7 +389,7 @@ function App() {
           )}
 
           {screen === "settings" && (
-            <SettingsScreen />
+            <SettingsScreen onRefreshGames={refresh} />
           )}
         </main>
 

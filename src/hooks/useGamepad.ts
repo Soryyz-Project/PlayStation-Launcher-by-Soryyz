@@ -4,7 +4,7 @@ export type ControllerType = "ps" | "xbox" | "generic" | "none";
 
 export type GamepadAction =
   | "up" | "down" | "left" | "right"
-  | "confirm" | "back" | "delete"
+  | "confirm" | "back" | "delete" | "search"
   | "lb" | "rb"
   | "start" | "select"
   | "toggle_hints";
@@ -42,6 +42,7 @@ export function useGamepad(callback: GamepadCallback) {
 
     if (b[0]?.pressed) return "confirm";   // A / Cross
     if (b[1]?.pressed) return "back";      // B / Circle
+    if (b[2]?.pressed) return "search";    // X / Square
     if (b[3]?.pressed) return "toggle_hints"; // Y / Triangle
     if (b[4]?.pressed) return "lb";
     if (b[5]?.pressed) return "rb";

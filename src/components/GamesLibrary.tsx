@@ -8,9 +8,10 @@ interface Props {
   focusIndex: number;
   onFocusChange: (index: number) => void;
   showFocus: boolean;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
-export function GamesLibrary({ games, loading, onLaunch, focusIndex, onFocusChange, showFocus }: Props) {
+export function GamesLibrary({ games, loading, onLaunch, focusIndex, onFocusChange, showFocus, searchInputRef }: Props) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [cols, setCols] = useState(4);
   const [query, setQuery] = useState("");
@@ -50,6 +51,7 @@ export function GamesLibrary({ games, loading, onLaunch, focusIndex, onFocusChan
         <div className="search-box">
           <span className="search-icon">🔍</span>
           <input
+            ref={searchInputRef}
             className="search-input"
             type="text"
             placeholder="Поиск игр..."

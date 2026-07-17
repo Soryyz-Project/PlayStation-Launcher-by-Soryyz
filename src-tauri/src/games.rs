@@ -254,9 +254,52 @@ fn get_steam_path() -> Option<PathBuf> {
     None
 }
 
+fn scan_user_path(paths: &[String]) -> Vec<GameEntry> {
+    let mut games = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    for p in paths {
+        let dir = std::path::Path::new(p);
+        if !dir.exists() {
+            continue;
+        }
+        if let Ok(entries) = std::fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    if let Some(exe) = find_executable(&path) {
+                        let name = path
+                            .file_stem()
+                            .map(|s| s.to_string_lossy().to_string())
+                            .unwrap_or_default();
+                        if seen.insert(exe.clone()) {
+                            games.push(GameEntry {
+                                name,
+                                path: exe,
+                                cover: String::new(),
+                                source: "Пользовательская".to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    games
+}
+
 #[tauri::command]
-pub fn scan_games() -> Vec<GameEntry> {
-    scan_all_games()
+pub fn scan_games(state: tauri::State<crate::config::ConfigState>) -> Vec<GameEntry> {
+    let mut games = scan_all_games();
+    let cfg = state.0.lock().unwrap();
+    let user = scan_user_path(&cfg.game_paths);
+    let mut seen: std::collections::HashSet<String> =
+        games.iter().map(|g| g.path.clone()).collect();
+    for game in user {
+        if seen.insert(game.path.clone()) {
+            games.push(game);
+        }
+    }
+    games
 }
 
 #[tauri::command]

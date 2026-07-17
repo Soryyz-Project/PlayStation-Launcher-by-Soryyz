@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { GameEntry } from "../types";
 
@@ -6,19 +6,19 @@ export function useGames() {
   const [games, setGames] = useState<GameEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const result = await invoke<GameEntry[]>("scan_games");
-        setGames(result);
-      } catch (e) {
-        console.error("Failed to scan games:", e);
-      } finally {
-        setLoading(false);
-      }
+  const scan = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await invoke<GameEntry[]>("scan_games");
+      setGames(result);
+    } catch (e) {
+      console.error("Failed to scan games:", e);
+    } finally {
+      setLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => { scan(); }, [scan]);
 
   const launch = async (path: string) => {
     try {
@@ -28,5 +28,5 @@ export function useGames() {
     }
   };
 
-  return { games, loading, launch };
+  return { games, loading, launch, refresh: scan };
 }
