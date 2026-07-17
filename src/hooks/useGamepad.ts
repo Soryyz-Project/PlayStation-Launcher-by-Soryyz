@@ -4,7 +4,7 @@ export type ControllerType = "ps" | "xbox" | "generic" | "none";
 
 export type GamepadAction =
   | "up" | "down" | "left" | "right"
-  | "confirm" | "back"
+  | "confirm" | "back" | "delete"
   | "lb" | "rb"
   | "start" | "select"
   | "toggle_hints";

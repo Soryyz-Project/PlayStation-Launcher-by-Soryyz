@@ -376,6 +376,8 @@ function App() {
               onBack={closeMediaViewer}
               controller={controllerType}
               onTabChange={setMediaTab}
+              showHints={showHints}
+              onToggleHints={() => setHintsVisible((v) => !v)}
             />
           )}
 
