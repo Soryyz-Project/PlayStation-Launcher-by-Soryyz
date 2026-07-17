@@ -8,6 +8,7 @@ pub struct AppConfig {
     pub auto_launch: bool,
     pub minimize_to_tray: bool,
     pub hints_visible: bool,
+    pub bg_video: String,
 }
 
 impl Default for AppConfig {
@@ -17,6 +18,7 @@ impl Default for AppConfig {
             auto_launch: false,
             minimize_to_tray: true,
             hints_visible: true,
+            bg_video: "S1.mp4".to_string(),
         }
     }
 }

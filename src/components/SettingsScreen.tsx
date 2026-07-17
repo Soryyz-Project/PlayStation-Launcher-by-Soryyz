@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 
+const BG_OPTIONS = ["S1.mp4", "S2.mov"];
+
 interface AppConfig {
   game_paths: string[];
   auto_launch: boolean;
   minimize_to_tray: boolean;
+  bg_video: string;
 }
 
 interface Props {
@@ -55,6 +58,22 @@ export function SettingsScreen({ onRefreshGames }: Props) {
             checked={config.auto_launch}
             onChange={(e) => setConfig({ ...config, auto_launch: e.target.checked })}
           />
+        </label>
+      </section>
+
+      <section className="settings-section">
+        <h3 className="settings-section-title">Оформление</h3>
+        <label className="settings-row">
+          <span>Фоновое видео</span>
+          <select
+            className="settings-select"
+            value={config.bg_video || "S1.mp4"}
+            onChange={(e) => setConfig({ ...config, bg_video: e.target.value })}
+          >
+            {BG_OPTIONS.map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
+          </select>
         </label>
       </section>
 

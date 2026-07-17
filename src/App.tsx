@@ -48,11 +48,13 @@ function App() {
   const [mediaTab, setMediaTab] = useState<"screenshots" | "videos" | null>(null);
   const [barState, setBarState] = useState<"normal" | "hiding" | "media" | "showing">("normal");
   const [hintsVisible, setHintsVisible] = useState(true);
+  const [bgVideo, setBgVideo] = useState("S1.mp4");
   const { games, loading, launch, refresh } = useGames();
 
   useEffect(() => {
-    invoke<{ hints_visible: boolean }>("get_config").then((cfg) => {
+    invoke<{ hints_visible: boolean; bg_video: string }>("get_config").then((cfg) => {
       if (cfg.hints_visible !== undefined) setHintsVisible(cfg.hints_visible);
+      if (cfg.bg_video) setBgVideo(cfg.bg_video);
     }).catch(() => {});
   }, []);
   const screenRef = useRef(screen);
@@ -67,6 +69,7 @@ function App() {
 
   useEffect(() => {
     invoke("get_config").then((cfg: any) => {
+      if (cfg.bg_video) setBgVideo(cfg.bg_video);
       invoke("set_config", { config: { ...cfg, hints_visible: hintsVisible } });
     }).catch(() => {});
   }, [hintsVisible]);
@@ -215,7 +218,7 @@ function App() {
   return (
     <>
       {showIntro && <PS5Intro onFinish={() => setShowIntro(false)} />}
-      <video className="bg-video" src="/bg/S1.mp4" muted loop autoPlay playsInline />
+      <video key={bgVideo} className="bg-video" src={`/bg/${bgVideo}`} muted loop autoPlay playsInline />
       <div className="bg-overlay" />
       <div className="bg-gradient" />
       <div className={`app ${showIntro ? "hidden" : ""}`}>
