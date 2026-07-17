@@ -30,10 +30,11 @@ interface Section {
 }
 
 function getSections(gamesCount: number): Section[] {
-  return [
-    { id: "hero", cols: 2 },
-    { id: "games", cols: Math.min(gamesCount, 6) },
-  ];
+  const sections: Section[] = [{ id: "hero", cols: 2 }];
+  if (gamesCount > 0) {
+    sections.push({ id: "games", cols: Math.min(gamesCount, 6) });
+  }
+  return sections;
 }
 
 function App() {
@@ -83,8 +84,10 @@ function App() {
 
   const handleGamepad = useCallback(
     (action: string) => {
+      try {
       setInputMode("gamepad");
       if (showIntro) return;
+      if (!action) return;
       const cs = screenRef.current;
       const secs = getSections(games.length);
 
@@ -97,14 +100,16 @@ function App() {
           case "up":
             setFocusSec((s) => {
               const next = Math.max(s - 1, 0);
-              setFocusItem((i) => Math.min(i, secs[next].cols - 1));
+              const max = secs[next].cols - 1;
+              setFocusItem((i) => Math.min(i, max >= 0 ? max : 0));
               return next;
             });
             return;
           case "down":
             setFocusSec((s) => {
               const next = Math.min(s + 1, secs.length - 1);
-              setFocusItem((i) => Math.min(i, secs[next].cols - 1));
+              const max = secs[next].cols - 1;
+              setFocusItem((i) => Math.min(i, max >= 0 ? max : 0));
               return next;
             });
             return;
@@ -123,7 +128,7 @@ function App() {
             if (sec.id === "hero") {
               if (focusItem === 0 && games.length > 0) launch(games[0].path);
               if (focusItem === 1) setScreen("games");
-            } else if (sec.id === "games" && focusItem < games.length) {
+            } else if (sec.id === "games" && focusItem >= 0 && focusItem < games.length) {
               launch(games[focusItem].path);
             }
             return;
@@ -173,6 +178,7 @@ function App() {
           });
           return;
       }
+      } catch (e) { console.error("gamepad handler error:", e); }
     },
     [showIntro, games.length, launch]
   );
