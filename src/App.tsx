@@ -219,7 +219,10 @@ function App() {
                 <span className="back-arrow">←</span>
                 <span>Назад</span>
               </button>
-              <div className="top-bar-media-tabs">
+              <div className={`top-bar-media-tabs ${showHints ? "with-hints" : ""}`}>
+                <div className={`media-tab-hint left ${showHints ? "visible" : ""}`}>
+                  <icons.LbIcon />
+                </div>
                 {MEDIA_TABS.map((tab) => (
                   <button
                     key={tab.id}
@@ -229,13 +232,10 @@ function App() {
                     {tab.label}
                   </button>
                 ))}
-              </div>
-              {showHints && (
-                <div className="media-tab-hints">
-                  <span className="hint-lb">LB</span>
-                  <span className="hint-rb">RB</span>
+                <div className={`media-tab-hint right ${showHints ? "visible" : ""}`}>
+                  <icons.RbIcon />
                 </div>
-              )}
+              </div>
             </div>
           ) : (
             <div className="top-bar-inner">
@@ -245,11 +245,9 @@ function App() {
                     <text x="11" y="16" textAnchor="middle" fill="white" fontSize="14" fontWeight="700" fontFamily="Arial">PS</text>
                   </svg>
                 </div>
-                {showHints && (
-                  <div className={`tab-hint left ${screen === "home" ? "hidden" : ""}`}>
-                    <icons.LbIcon />
-                  </div>
-                )}
+                <div className={`tab-hint left ${showHints ? "visible" : ""} ${screen === "home" ? "no-op" : ""}`}>
+                  <icons.LbIcon />
+                </div>
                 {TOP_ITEMS.map((item) => (
                   <button
                     key={item.id}
@@ -259,14 +257,17 @@ function App() {
                     {item.label}
                   </button>
                 ))}
-                {showHints && (
-                  <div className={`tab-hint right ${screen === "settings" ? "hidden" : ""}`}>
-                    <icons.RbIcon />
-                  </div>
-                )}
+                <div className={`tab-hint right ${showHints ? "visible" : ""} ${screen === "settings" ? "no-op" : ""}`}>
+                  <icons.RbIcon />
+                </div>
               </div>
               <div className="top-bar-right">
-                <div className="controller-badge" style={{ width: 22, height: 22, opacity: 0.5 }}>
+                <div className="controller-badge" style={{
+                  width: 22, height: 22, opacity: 0.5,
+                  transition: "opacity 0.3s ease",
+                  opacity: inputMode === "gamepad" && controllerType !== "none" ? 0.5 : 0,
+                  pointerEvents: "none",
+                }}>
                   <img
                     src={controllerType === "ps"
                       ? "/icons/PS_iconpack/Button - PS Home 2.svg"
@@ -274,7 +275,7 @@ function App() {
                         ? "/icons/XBOX_iconpack/button_xbox_digital_home_white.svg"
                         : ""}
                     alt=""
-                    style={{ width: 22, height: 22, display: controllerType === "none" ? "none" : "block" }}
+                    style={{ width: 22, height: 22, display: "block" }}
                   />
                 </div>
                 <div className="time-display">
@@ -383,21 +384,19 @@ function App() {
           )}
         </main>
 
-        {showHints && !mediaTab && (
-          <footer className="bottom-bar">
-            <div className="bottom-bar-inner">
-              <div className="bottom-hint">
-                <icons.ConfirmIcon /> Выбрать
-              </div>
-              <div className="bottom-hint">
-                <icons.BackIcon /> Назад
-              </div>
-              <div className="bottom-hint">
-                <icons.DpadNav /> Навигация
-              </div>
+        <footer className={`bottom-bar ${showHints && !mediaTab ? "visible" : ""}`}>
+          <div className="bottom-bar-inner">
+            <div className="bottom-hint">
+              <icons.ConfirmIcon /> Выбрать
             </div>
-          </footer>
-        )}
+            <div className="bottom-hint">
+              <icons.BackIcon /> Назад
+            </div>
+            <div className="bottom-hint">
+              <icons.DpadNav /> Навигация
+            </div>
+          </div>
+        </footer>
       </div>
     </>
   );

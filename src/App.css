@@ -371,6 +371,14 @@ html, body, #root {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.bottom-bar.visible {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 .bottom-bar-inner {
@@ -445,29 +453,27 @@ html, body, #root {
 .tab-hint {
   display: flex;
   align-items: center;
-  opacity: 0.5;
-  transition: opacity 0.25s ease, width 0.25s ease, margin 0.25s ease;
-  overflow: hidden;
-  width: 28px;
-}
-
-.tab-hint.hidden {
   opacity: 0;
   width: 0;
-  margin: 0;
+  overflow: hidden;
+  transition: opacity 0.25s ease, width 0.25s ease, margin 0.25s ease;
+  pointer-events: none;
+}
+
+.tab-hint.visible {
+  opacity: 0.5;
+  width: 28px;
+  pointer-events: auto;
+}
+
+.tab-hint.no-op {
+  opacity: 0;
+  width: 0;
   pointer-events: none;
 }
 
 .tab-hint:hover {
   opacity: 0.8;
-}
-
-.tab-hint-left {
-  margin-right: 8px;
-}
-
-.tab-hint-right {
-  margin-left: 8px;
 }
 
 /* Controller Indicator */
@@ -1045,13 +1051,6 @@ html, body, #root {
   font-size: 18px;
 }
 
-.top-bar-media-tabs {
-  display: flex;
-  gap: 4px;
-  flex: 1;
-  justify-content: center;
-}
-
 .top-bar-media-tab {
   background: none;
   border: none;
@@ -1103,20 +1102,28 @@ html, body, #root {
   margin-left: 2px;
 }
 
-.media-tab-hints {
+.media-tab-hint {
   display: flex;
-  gap: 6px;
   align-items: center;
-  font-size: 11px;
-  color: var(--text-muted);
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  transition: opacity 0.25s ease, width 0.25s ease, margin 0.25s ease;
+  pointer-events: none;
 }
 
-.hint-lb, .hint-rb {
-  background: var(--bg-card);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
+.media-tab-hint.visible {
+  opacity: 0.5;
+  width: 28px;
+  pointer-events: auto;
+}
+
+.top-bar-media-tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
 }
 
 .top-bar-spacer {
