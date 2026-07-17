@@ -51,12 +51,19 @@ function App() {
   const [bgVideo, setBgVideo] = useState("S1.mp4");
   const { games, loading, launch, refresh } = useGames();
 
-  useEffect(() => {
+  const loadConfig = useCallback(() => {
     invoke<{ hints_visible: boolean; bg_video: string }>("get_config").then((cfg) => {
       if (cfg.hints_visible !== undefined) setHintsVisible(cfg.hints_visible);
       if (cfg.bg_video) setBgVideo(cfg.bg_video);
     }).catch(() => {});
   }, []);
+
+  const refreshAll = useCallback(() => {
+    refresh();
+    loadConfig();
+  }, [refresh, loadConfig]);
+
+  useEffect(() => { loadConfig(); }, [loadConfig]);
   const screenRef = useRef(screen);
   screenRef.current = screen;
   const focusSecRef = useRef(focusSec);
@@ -69,7 +76,6 @@ function App() {
 
   useEffect(() => {
     invoke("get_config").then((cfg: any) => {
-      if (cfg.bg_video) setBgVideo(cfg.bg_video);
       invoke("set_config", { config: { ...cfg, hints_visible: hintsVisible } });
     }).catch(() => {});
   }, [hintsVisible]);
@@ -395,7 +401,7 @@ function App() {
           )}
 
           {screen === "settings" && (
-            <SettingsScreen onRefreshGames={refresh} />
+            <SettingsScreen onRefreshGames={refreshAll} />
           )}
         </main>
 

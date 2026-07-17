@@ -2,7 +2,14 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 
-const BG_OPTIONS = ["S1.mp4", "S2.mov"];
+const BG_OPTIONS = [
+  { label: "1", value: "S1.mp4" },
+  { label: "2", value: "S2.mp4" },
+  { label: "3", value: "S3.mp4" },
+  { label: "4", value: "S4.mp4" },
+  { label: "5", value: "S5.mp4" },
+  { label: "6", value: "S6.mp4" },
+];
 
 interface AppConfig {
   game_paths: string[];
@@ -70,8 +77,8 @@ export function SettingsScreen({ onRefreshGames }: Props) {
             value={config.bg_video || "S1.mp4"}
             onChange={(e) => setConfig({ ...config, bg_video: e.target.value })}
           >
-            {BG_OPTIONS.map((v) => (
-              <option key={v} value={v}>{v}</option>
+            {BG_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
         </label>
