@@ -231,7 +231,7 @@ function App() {
                 </div>
                 {showHints && (
                   <div className={`tab-hint left ${screen === "home" ? "hidden" : ""}`}>
-                    <icons.LBIcon />
+                    <icons.LbIcon />
                   </div>
                 )}
                 {TOP_ITEMS.map((item) => (
@@ -245,7 +245,7 @@ function App() {
                 ))}
                 {showHints && (
                   <div className={`tab-hint right ${screen === "settings" ? "hidden" : ""}`}>
-                    <icons.RBIcon />
+                    <icons.RbIcon />
                   </div>
                 )}
               </div>
