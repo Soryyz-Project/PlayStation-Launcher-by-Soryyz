@@ -7,6 +7,7 @@ use std::sync::Mutex;
 pub struct AppConfig {
     pub game_paths: Vec<String>,
     pub recent_games: Vec<String>,
+    pub favorite_paths: Vec<String>,
     pub auto_launch: bool,
     pub minimize_to_tray: bool,
     pub hints_visible: bool,
@@ -19,6 +20,7 @@ pub struct AppConfig {
     pub start_screen: String,
     pub show_game_covers: bool,
     pub language: String,
+    pub controller_theme: String,
 }
 
 impl Default for AppConfig {
@@ -26,6 +28,7 @@ impl Default for AppConfig {
         Self {
             game_paths: Vec::new(),
             recent_games: Vec::new(),
+            favorite_paths: Vec::new(),
             auto_launch: false,
             minimize_to_tray: true,
             hints_visible: true,
@@ -38,15 +41,19 @@ impl Default for AppConfig {
             start_screen: "home".to_string(),
             show_game_covers: true,
             language: "ru".to_string(),
+            controller_theme: "ps".to_string(),
         }
     }
 }
 
 impl AppConfig {
     fn path() -> PathBuf {
-        let mut p = std::env::current_exe().unwrap_or_default();
-        p.set_file_name("config.json");
-        p
+        let base = std::env::var("APPDATA")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| std::env::current_exe().unwrap_or_default());
+        let dir = base.join("SLauncher");
+        let _ = std::fs::create_dir_all(&dir);
+        dir.join("config.json")
     }
 
     pub fn load() -> Self {

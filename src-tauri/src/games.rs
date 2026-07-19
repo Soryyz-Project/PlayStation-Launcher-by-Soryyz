@@ -1,4 +1,5 @@
 use serde::Serialize;
+use serde_json;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tauri::Manager;
@@ -28,6 +29,16 @@ pub fn scan_all_games() -> Vec<GameEntry> {
             games.push(game);
         }
     }
+    for game in scan_gog_games() {
+        if seen.insert(game.path.clone()) {
+            games.push(game);
+        }
+    }
+    for game in scan_battlenet_games() {
+        if seen.insert(game.path.clone()) {
+            games.push(game);
+        }
+    }
     for game in scan_installed_programs() {
         if seen.insert(game.path.clone()) {
             games.push(game);
@@ -35,6 +46,107 @@ pub fn scan_all_games() -> Vec<GameEntry> {
     }
 
     games.sort_by_key(|a| a.name.to_lowercase());
+    games
+}
+
+fn scan_gog_games() -> Vec<GameEntry> {
+    let mut games = Vec::new();
+    let progdata = std::env::var("PROGRAMDATA").unwrap_or_default();
+    let galaxy_dir = PathBuf::from(&progdata).join("GOG.com").join("Galaxy").join("webcache");
+    if !galaxy_dir.exists() {
+        return games;
+    }
+
+    let Ok(entries) = std::fs::read_dir(&galaxy_dir) else { return games };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("json") {
+            continue;
+        }
+        if !path.file_name().map_or(false, |n| n.to_string_lossy().starts_with("game_")) {
+            continue;
+        }
+        let Ok(content) = std::fs::read_to_string(&path) else { continue };
+        let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) else { continue };
+        let name = val.get("title").and_then(|v| v.as_str()).unwrap_or("");
+        if name.is_empty() { continue; }
+        let install_path = val
+            .get("installation_path")
+            .or_else(|| val.get("path"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        if install_path.is_empty() { continue; }
+        let dir = PathBuf::from(install_path);
+        if let Some(exe) = find_executable(&dir) {
+            games.push(GameEntry {
+                name: name.to_string(),
+                path: exe,
+                cover: String::new(),
+                source: "GOG".to_string(),
+            });
+        }
+    }
+    games
+}
+
+fn scan_battlenet_games() -> Vec<GameEntry> {
+    let mut games = Vec::new();
+    let program_data = std::env::var("PROGRAMDATA").unwrap_or_default();
+    let battlenet_dir = PathBuf::from(&program_data).join("Battle.net").join("Agent");
+    let agent_db = battlenet_dir.join("product.db");
+    if !agent_db.exists() {
+        return games;
+    }
+
+    if let Ok(content) = std::fs::read_to_string(&agent_db) {
+        for line in content.lines() {
+            if !line.contains("game") && !line.contains("install_path") && !line.contains("product_name") {
+                continue;
+            }
+        }
+    }
+
+    let battlenet_configs = [
+        PathBuf::from(&program_data).join("Battle.net").join("Agent").join("data"),
+        PathBuf::from(&std::env::var("PROGRAMFILES(X86)").unwrap_or_default()).join("Battle.net"),
+    ];
+
+    for cfg_dir in &battlenet_configs {
+        if !cfg_dir.exists() { continue; }
+        if let Ok(entries) = std::fs::read_dir(cfg_dir) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.extension().and_then(|s| s.to_str()) != Some("db") && p.extension().and_then(|s| s.to_str()) != Some("config") {
+                    continue;
+                }
+                let Ok(content) = std::fs::read_to_string(&p) else { continue };
+                let mut name = String::new();
+                let mut path = String::new();
+                for line in content.lines() {
+                    if line.contains("product_name") {
+                        if let Some(val) = line.split('=').nth(1) {
+                            name = val.trim().trim_matches('"').to_string();
+                        }
+                    }
+                    if line.contains("install_path") {
+                        if let Some(val) = line.split('=').nth(1) {
+                            path = val.trim().trim_matches('"').to_string();
+                        }
+                    }
+                }
+                if name.is_empty() || path.is_empty() { continue; }
+                let dir = PathBuf::from(&path);
+                if let Some(exe) = find_executable(&dir) {
+                    games.push(GameEntry {
+                        name,
+                        path: exe,
+                        cover: String::new(),
+                        source: "Battle.net".to_string(),
+                    });
+                }
+            }
+        }
+    }
     games
 }
 
@@ -337,6 +449,25 @@ pub fn show_window(app_handle: tauri::AppHandle) {
         let _ = win.show();
         let _ = win.set_focus();
     }
+}
+
+#[tauri::command]
+pub fn toggle_favorite(path: String, state: tauri::State<crate::config::ConfigState>) -> bool {
+    let mut cfg = state.0.lock().unwrap();
+    if let Some(pos) = cfg.favorite_paths.iter().position(|p| p == &path) {
+        cfg.favorite_paths.remove(pos);
+        cfg.save();
+        false
+    } else {
+        cfg.favorite_paths.push(path);
+        cfg.save();
+        true
+    }
+}
+
+#[tauri::command]
+pub fn get_favorites(state: tauri::State<crate::config::ConfigState>) -> Vec<String> {
+    state.0.lock().unwrap().favorite_paths.clone()
 }
 
 #[tauri::command]

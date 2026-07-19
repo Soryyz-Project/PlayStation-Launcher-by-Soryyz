@@ -11,3 +11,5 @@ export interface FocusState {
   section: number;
   item: number;
 }
+
+export type SortMode = "name" | "source" | "recent";

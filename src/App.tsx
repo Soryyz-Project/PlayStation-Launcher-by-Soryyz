@@ -67,7 +67,7 @@ function App() {
   const [accentColor, setAccentColor] = useState("#2d7aff");
   const [lang, setLang] = useState<Lang>("ru");
   const [startScreen, setStartScreen] = useState("home");
-  const { games, loading, launch, refresh } = useGames();
+  const { games, loading, launch, refresh, favorites, toggleFav, loadFavorites } = useGames();
   const [recentGames, setRecentGames] = useState<string[]>([]);
 
   const reloadRecent = useCallback(async () => {
@@ -80,7 +80,8 @@ function App() {
   const handleLaunch = useCallback(async (path: string) => {
     await launch(path);
     await reloadRecent();
-  }, [launch, reloadRecent]);
+    await loadFavorites();
+  }, [launch, reloadRecent, loadFavorites]);
 
   const loadConfig = useCallback(async () => {
     try {
@@ -106,7 +107,8 @@ function App() {
   const refreshAll = useCallback(async () => {
     await refresh();
     await loadConfig();
-  }, [refresh, loadConfig]);
+    await loadFavorites();
+  }, [refresh, loadConfig, loadFavorites]);
 
   useEffect(() => { loadConfig(); }, [loadConfig]);
   useEffect(() => { if (screen === "home" && startScreen !== "home") setScreen(startScreen as Screen); }, []);
@@ -452,6 +454,30 @@ function App() {
                 </div>
               </section>
 
+              {games.filter(g => favorites.has(g.path)).length > 0 && (
+                <section className="games-strip-section">
+                  <div className="section-header">
+                    <h2 className="section-title">{localeCtx.t("favorites")}</h2>
+                  </div>
+                  <div className="games-strip">
+                    {games.filter(g => favorites.has(g.path)).map((game, i) => (
+                      <button
+                        key={`fav-${i}`}
+                        className="game-tile"
+                        onClick={() => handleLaunch(game.path)}
+                      >
+                        <div className="game-tile-bg">
+                          <span className="game-tile-icon">{game.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div className="game-tile-info">
+                          <span className="game-tile-name">{game.name}</span>
+                          <span className="game-tile-source">{game.source}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
               <section className="games-strip-section">
                 <div className="section-header">
                   <h2 className="section-title">{localeCtx.t("last_games")}</h2>
@@ -493,6 +519,8 @@ function App() {
               showFocus={showFocus}
               searchInputRef={searchInputRef}
               libColsRef={libColsRef}
+              favorites={favorites}
+              onToggleFav={toggleFav}
             />
           )}
 

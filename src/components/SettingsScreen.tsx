@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { check as checkUpdatePlugin } from "@tauri-apps/plugin-updater";
 import { useLocale } from "../hooks/useLocale";
 import { langNames, type Lang } from "../locales";
 
@@ -105,6 +106,27 @@ export function SettingsScreen({
   const colorRef = useRef<HTMLDivElement>(null);
   const colorGridRef = useRef<HTMLDivElement>(null);
   const [, forceUpdate] = useState(0);
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
+
+  const checkUpdate = useCallback(async () => {
+    setUpdateStatus("...");
+    try {
+      const update = await checkUpdatePlugin();
+      if (update) {
+        setUpdateStatus(t("update_available"));
+        let downloaded = 0;
+        await update.downloadAndInstall((event) => {
+          if ('progress' in event) downloaded = event.progress;
+        });
+      } else {
+        setUpdateStatus(t("update_uptodate"));
+        setTimeout(() => setUpdateStatus(null), 3000);
+      }
+    } catch {
+      setUpdateStatus(t("update_uptodate"));
+      setTimeout(() => setUpdateStatus(null), 3000);
+    }
+  }, [t]);
 
   useEffect(() => {
     settingsSaveRef.current = async () => {
@@ -380,6 +402,12 @@ export function SettingsScreen({
           <div className="settings-row">
             <span>{t("app_version")}</span>
             <span className="settings-value">1.0.0</span>
+          </div>
+          <div className="settings-row">
+            <span>{t("update_check")}</span>
+            <button className="settings-btn" onClick={checkUpdate}>
+              {updateStatus || t("update_check")}
+            </button>
           </div>
           <div className="settings-row" style={{ border: "none" }}>
             {!resetConfirm ? (

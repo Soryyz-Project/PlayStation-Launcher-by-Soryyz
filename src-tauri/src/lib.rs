@@ -47,6 +47,7 @@ pub fn run() {
         .manage(ConfigState(std::sync::Mutex::new(cfg)))
         .setup(|app| {
             app.handle().plugin(tauri_plugin_dialog::init())?;
+            app.handle().plugin(tauri_plugin_updater::Builder::new().build())?;
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
@@ -75,6 +76,8 @@ pub fn run() {
             config::get_config,
             config::set_config,
             games::open_folder,
+            games::toggle_favorite,
+            games::get_favorites,
             media::get_media_counts,
             media::get_media_files,
             media::delete_media_file,

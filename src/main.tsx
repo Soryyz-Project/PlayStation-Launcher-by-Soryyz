@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
-window.onerror = (msg, src, line, col, err) => {
+window.onerror = (msg, _src, _line, _col, err) => {
   console.error("Global error:", msg, err);
 };
 
