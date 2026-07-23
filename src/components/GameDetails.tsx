@@ -25,7 +25,7 @@ const setDiscord = (details: string) => {
 
 export function GameDetails({ game, onLaunch, onClose, showFocus, icons, showHints, coverData, tagsData, onTagsChange, tagEditorOpen, onToggleEditor, gamepadHandlerRef }: Props) {
   const { t, lang } = useLocale();
-  const [focusIdx, setFocusIdx] = useState(0);
+  const [focusIdx] = useState(0);
   const [tagEditorFocusIdx, setTagEditorFocusIdx] = useState(0);
   const tagEditorFocusRef = useRef(0);
   tagEditorFocusRef.current = tagEditorFocusIdx;

@@ -3,7 +3,6 @@ use std::io::{Read, Write};
 use std::sync::Mutex;
 use std::fs::OpenOptions;
 use std::os::windows::fs::OpenOptionsExt;
-use crate::config::AppConfig;
 use tauri::State;
 
 const CLIENT_ID: &str = "1529438788814766190";

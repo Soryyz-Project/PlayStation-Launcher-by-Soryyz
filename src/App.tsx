@@ -84,7 +84,7 @@ function App() {
   const [accentAuto, setAccentAuto] = useState(true);
   const [lang, setLang] = useState<Lang>("ru");
   const [startScreen, setStartScreen] = useState("home");
-  const { games, loading, launch, refresh, favorites, toggleFav, loadFavorites } = useGames();
+  const { games, loading, refresh, favorites, toggleFav, loadFavorites } = useGames();
   const [recentGames, setRecentGames] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [detailsGame, setDetailsGame] = useState<GameEntry | null>(null);

@@ -40,7 +40,7 @@ const SORT_OPTIONS: { value: SortMode; labelKey: string }[] = [
 const TAG_FILTER_ALL = "__all__";
 const TAG_FILTER_UNTAGGED = "__untagged__";
 
-export function GamesLibrary({ games, loading, onLaunch, onShowDetails, focusIndex, onFocusChange, showFocus, searchInputRef, libColsRef, favorites, onToggleFav, gamepadHandlerRef, icons, gpadActive, showHints, viewMode, onViewModeChange, showGameCovers, recentGames, tagsData, onTagsChange }: Props) {
+export function GamesLibrary({ games, loading, onLaunch, onShowDetails, focusIndex, onFocusChange, showFocus, searchInputRef, libColsRef, favorites, onToggleFav, gamepadHandlerRef, icons, showHints, viewMode, onViewModeChange, showGameCovers, recentGames, tagsData }: Props) {
   const { t, plural, lang } = useLocale();
   const gridRef = useRef<HTMLDivElement>(null);
   const [cols, setCols] = useState(4);

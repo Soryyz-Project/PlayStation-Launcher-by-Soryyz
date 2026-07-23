@@ -96,6 +96,7 @@ const defaultConfig: AppConfig = {
   show_game_covers: true,
   language: "ru",
   controller_theme: "ps",
+  view_mode: "grid",
   discord_enabled: true,
 };
 
@@ -114,7 +115,7 @@ export function SettingsScreen({
   const selectRef = useRef<HTMLDivElement>(null);
   const langSelectRef = useRef<HTMLDivElement>(null);
   const themeSelectRef = useRef<HTMLDivElement>(null);
-  const colorRef = useRef<HTMLDivElement>(null);
+  const colorRef = useRef<HTMLButtonElement>(null);
   const colorGridRef = useRef<HTMLDivElement>(null);
   const [, forceUpdate] = useState(0);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
@@ -125,10 +126,7 @@ export function SettingsScreen({
       const update = await checkUpdatePlugin();
       if (update) {
         setUpdateStatus(t("update_available"));
-        let downloaded = 0;
-        await update.downloadAndInstall((event) => {
-          if ('progress' in event) downloaded = event.progress;
-        });
+        await update.downloadAndInstall();
       } else {
         setUpdateStatus(t("update_uptodate"));
         setTimeout(() => setUpdateStatus(null), 3000);
@@ -154,25 +152,7 @@ export function SettingsScreen({
     let retries = 0;
     const fetchConfig = () => {
       invoke<AppConfig>("get_config").then((cfg) => {
-        setConfig({
-          game_paths: cfg.game_paths || [],
-          auto_launch: cfg.auto_launch ?? false,
-          minimize_to_tray: cfg.minimize_to_tray ?? true,
-          hints_visible: cfg.hints_visible ?? true,
-          bg_video: cfg.bg_video || "S1.mp4",
-          bg_video_enabled: cfg.bg_video_enabled ?? true,
-          bg_dimmed: cfg.bg_dimmed ?? 0.8,
-          ui_opacity: cfg.ui_opacity ?? 0.85,
-          game_card_opacity: cfg.game_card_opacity ?? 0.8,
-          accent_color: cfg.accent_color || "#2d7aff",
-          accent_auto: cfg.accent_auto ?? true,
-          start_screen: cfg.start_screen || "home",
-          show_game_covers: cfg.show_game_covers ?? true,
-          language: (cfg.language && ["ru", "en", "uk", "be", "kk", "uz"].includes(cfg.language) ? cfg.language : "ru") as Lang,
-          controller_theme: cfg.controller_theme || "ps",
-          view_mode: cfg.view_mode || "grid",
-  discord_enabled: cfg.discord_enabled ?? true,
-        });
+        setConfig({ ...defaultConfig, ...cfg });
       }).catch((err) => {
         console.error("Failed to load config", err);
         if (retries < 3) {
